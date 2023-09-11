@@ -8,7 +8,7 @@ template that fits most use cases for a filterable select dropdown. The componen
 as lightweight as possible, while maintaining high standards for accessibility, developer
 experience, and customization.
 
-Vue Select Style is a fork of [vue-select](https://github.com/Renssethe/vue-select-style) with a new
+Vue Select Style is a fork of [vue-select](https://github.com/sagalbot/vue-select) with a new
 template and some new features.
 
 ## Get started
