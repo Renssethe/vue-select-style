@@ -1,5 +1,6 @@
+import { it, describe, expect } from 'vitest'
 import { shallowMount } from '@vue/test-utils'
-import VueSelect from '../../src/components/Select'
+import VueSelect from '@/components/Select.vue'
 
 describe('Single value options', () => {
   it('should reset the search input on focus lost', () => {
@@ -15,7 +16,7 @@ describe('Single value options', () => {
 
   it('should not reset the search input on focus lost when clearSearchOnSelect is false', () => {
     const Select = shallowMount(VueSelect, {
-      propsData: { value: 'foo', clearSearchOnSelect: false },
+      props: { value: 'foo', clearSearchOnSelect: false },
     })
 
     expect(Select.vm.clearSearchOnSelect).toEqual(false)

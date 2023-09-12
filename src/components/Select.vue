@@ -17,7 +17,7 @@
     >
       <div ref="selectedOptions" class="vs__selected-options">
         <slot
-          v-for="option in selectedValue"
+          v-for="(option, i) in selectedValue"
           name="selected-option-container"
           :option="normalizeOptionForSlot(option)"
           :deselect="deselect"
@@ -36,7 +36,7 @@
             </slot>
             <button
               v-if="multiple"
-              ref="deselectButtons"
+              :ref="(el) => (deselectButtons[i] = el)"
               :disabled="disabled"
               type="button"
               class="vs__deselect"
@@ -140,16 +140,16 @@
 </template>
 
 <script>
-import pointerScroll from '../mixins/pointerScroll.js'
-import typeAheadPointer from '../mixins/typeAheadPointer.js'
-import ajax from '../mixins/ajax.js'
-import childComponents from './childComponents.js'
-import appendToBody from '../directives/appendToBody.js'
-import sortAndStringify from '../utility/sortAndStringify.js'
-import uniqueId from '../utility/uniqueId.js'
+import pointerScroll from '@/mixins/pointerScroll.js'
+import typeAheadPointer from '@/mixins/typeAheadPointer.js'
+import ajax from '@/mixins/ajax.js'
+import childComponents from '@/components/childComponents.js'
+import appendToBody from '@/directives/appendToBody.js'
+import sortAndStringify from '@/utility/sortAndStringify.js'
+import uniqueId from '@/utility/uniqueId.js'
 
 /**
- * @name VueSelect
+ * @name VueSelectStyle
  */
 export default {
   components: { ...childComponents },
@@ -157,16 +157,38 @@ export default {
   directives: { appendToBody },
 
   mixins: [pointerScroll, typeAheadPointer, ajax],
+  
+  compatConfig: {
+    MODE: 3,
+  },
+
+  emits: [
+    'open',
+    'close',
+    'update:modelValue',
+    'search',
+    'search:compositionstart',
+    'search:compositionend',
+    'search:keydown',
+    'search:blur',
+    'search:focus',
+    'search:input',
+    'option:created',
+    'option:selecting',
+    'option:selected',
+    'option:deselecting',
+    'option:deselected',
+  ],
 
   props: {
     /**
      * Contains the currently selected value. Very similar to a
      * `value` attribute on an <input>. You can listen for changes
      * with the 'input' event.
-     * @type {Object||String||null}
+     * @type {Object|String|Array|null}
      */
     // eslint-disable-next-line vue/require-default-prop,vue/require-prop-types
-    value: {},
+    modelValue: {},
 
     /**
      * An object with any custom components that you'd like to overwrite
@@ -575,10 +597,7 @@ export default {
      */
     selectOnKeyCodes: {
       type: Array,
-      default: () => [
-        // enter
-        13,
-      ],
+      default: () => [13],
     },
 
     /**
@@ -605,7 +624,7 @@ export default {
       type: Function,
       /**
        * @param map {Object}
-       * @param vm {VueSelect}
+       * @param vm {VueSelectStyle}
        * @return {Object}
        */
       default: (map, vm) => map,
@@ -682,20 +701,22 @@ export default {
       pushedTags: [],
       // eslint-disable-next-line vue/no-reserved-keys
       _value: [], // Internal value managed by Vue Select if no `value` prop is passed
+      deselectButtons: [],
     }
   },
 
   computed: {
+    isReducingValues() {
+      return this.$props.reduce !== this.$options.props.reduce.default
+    },
+
     /**
      * Determine if the component needs to
      * track the state of values internally.
      * @return {boolean}
      */
     isTrackingValues() {
-      return (
-        typeof this.value === 'undefined' ||
-        this.$options.propsData.hasOwnProperty('reduce')
-      )
+      return typeof this.modelValue === 'undefined' || this.isReducingValues
     },
 
     /**
@@ -703,7 +724,7 @@ export default {
      * @return {Array}
      */
     selectedValue() {
-      let value = this.value
+      let value = this.modelValue
       if (this.isTrackingValues) {
         // Vue select has to manage value internally
         value = this.$data._value
@@ -732,7 +753,7 @@ export default {
      * @returns {HTMLInputElement}
      */
     searchEl() {
-      return !!this.$scopedSlots['search']
+      return this.$slots['search']
         ? this.$refs.selectedOptions.querySelector(
             this.searchInputQuerySelector
           )
@@ -740,7 +761,7 @@ export default {
     },
 
     /**
-     * The object to be bound to the $slots.search scoped slot.
+     * The object to be bound to the $slots.search slot.
      * @returns {Object}
      */
     scope() {
@@ -775,7 +796,6 @@ export default {
             compositionstart: () => (this.isComposing = true),
             compositionend: () => (this.isComposing = false),
             keydown: this.onSearchKeyDown,
-            keypress: this.onSearchKeyPress,
             blur: this.onSearchBlur,
             focus: this.onSearchFocus,
             input: (e) => (this.search = e.target.value),
@@ -878,7 +898,7 @@ export default {
         return optionList
       }
 
-      let options = this.search.length
+      const options = this.search.length
         ? this.filter(optionList, this.search, this)
         : optionList
       if (this.taggable && this.search.length) {
@@ -918,7 +938,7 @@ export default {
      * @return {[type]} [description]
      */
     options(newOptions, oldOptions) {
-      let shouldReset = () =>
+      const shouldReset = () =>
         typeof this.resetOnOptionsChange === 'function'
           ? this.resetOnOptionsChange(
               newOptions,
@@ -931,8 +951,8 @@ export default {
         this.clearSelection()
       }
 
-      if (this.value && this.isTrackingValues) {
-        this.setInternalValueFromOptions(this.value)
+      if (this.modelValue && this.isTrackingValues) {
+        this.setInternalValueFromOptions(this.modelValue)
       }
     },
 
@@ -940,7 +960,7 @@ export default {
      * Make sure to update internal
      * value if prop changes outside
      */
-    value: {
+    modelValue: {
       immediate: true,
       handler(val) {
         if (this.isTrackingValues) {
@@ -961,18 +981,10 @@ export default {
     open(isOpen) {
       this.$emit(isOpen ? 'open' : 'close')
     },
-
-    search(search) {
-      if (search.length) {
-        this.open = true
-      }
-    },
   },
 
   created() {
     this.mutableLoading = this.loading
-
-    this.$on('option:created', this.pushTag)
   },
 
   methods: {
@@ -1002,7 +1014,9 @@ export default {
       this.$emit('option:selecting', option)
       if (!this.isOptionSelected(option)) {
         if (this.taggable && !this.optionExists(option)) {
+          /* @TODO: could we use v-model instead of push-tags? */
           this.$emit('option:created', option)
+          this.pushTag(option)
         }
         if (this.multiple) {
           option = this.selectedValue.concat(option)
@@ -1049,13 +1063,11 @@ export default {
     onAfterSelect(option) {
       if (this.closeOnSelect) {
         this.open = !this.open
+        this.searchEl.blur()
       }
 
       if (this.clearSearchOnSelect) {
         this.search = ''
-      }
-      if (this.noDrop && this.multiple) {
-        this.$nextTick(() => this.$refs.search.focus())
       }
     },
 
@@ -1068,7 +1080,7 @@ export default {
      * @param value
      */
     updateValue(value) {
-      if (typeof this.value === 'undefined') {
+      if (typeof this.modelValue === 'undefined') {
         // Vue select has to manage value
         this.$data._value = value
       }
@@ -1081,7 +1093,7 @@ export default {
         }
       }
 
-      this.$emit('input', value)
+      this.$emit('update:modelValue', value)
     },
 
     /**
@@ -1098,7 +1110,7 @@ export default {
       //  don't react to click on deselect/clear buttons,
       //  they dropdown state will be set in their click handlers
       const ignoredButtons = [
-        ...(this.$refs['deselectButtons'] || []),
+        ...(this.deselectButtons || []),
         ...([this.$refs['clearButton']] || []),
       ]
 
@@ -1253,7 +1265,7 @@ export default {
      */
     onEscape() {
       if (!this.search.length) {
-        this.open = false
+        this.searchEl.blur()
       } else {
         this.search = ''
       }
@@ -1315,7 +1327,7 @@ export default {
 
     /**
      * Search <input> KeyBoardEvent handler.
-     * @param {KeyboardEvent} e
+     * @param e {KeyboardEvent}
      * @return {Function}
      */
     onSearchKeyDown(e) {
@@ -1334,19 +1346,11 @@ export default {
         //  up.prevent
         38: (e) => {
           e.preventDefault()
-          if (!this.open) {
-            this.open = true
-            return
-          }
           return this.typeAheadUp()
         },
         //  down.prevent
         40: (e) => {
           e.preventDefault()
-          if (!this.open) {
-            this.open = true
-            return
-          }
           return this.typeAheadDown()
         },
       }
@@ -1359,17 +1363,6 @@ export default {
 
       if (typeof handlers[e.keyCode] === 'function') {
         return handlers[e.keyCode](e)
-      }
-    },
-
-    /**
-     * @todo: Probably want to add a mapKeyPress method just like we have for keydown.
-     * @param {KeyboardEvent} e
-     */
-    onSearchKeyPress(e) {
-      if (!this.open && e.keyCode === 32) {
-        e.preventDefault()
-        this.open = true
       }
     },
   },

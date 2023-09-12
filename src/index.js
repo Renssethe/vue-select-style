@@ -1,5 +1,3 @@
-import VueSelect from './components/Select.vue'
-import mixins from './mixins/index.js'
+import VueSelectStyle from './components/Select.vue'
 
-export default VueSelect
-export { VueSelect, mixins }
+export default VueSelectStyle

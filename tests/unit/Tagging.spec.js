@@ -1,10 +1,11 @@
+import { it, describe, expect, vi } from 'vitest'
 import {
   mountDefault,
   searchSubmit,
   selectTag,
   selectWithProps,
-} from '../helpers'
-import Select from '../../src/components/Select'
+} from '@tests/helpers.js'
+import VueSelect from '@/components/Select.vue'
 
 describe('When Tagging Is Enabled', () => {
   it('can determine if a given option string already exists', () => {
@@ -40,7 +41,7 @@ describe('When Tagging Is Enabled', () => {
     const Select = selectWithProps({
       taggable: true,
       multiple: true,
-      value: ['one'],
+      modelValue: ['one'],
       options: ['one', 'two'],
     })
 
@@ -78,7 +79,7 @@ describe('When Tagging Is Enabled', () => {
       pushTags: true,
       taggable: true,
       multiple: true,
-      value: ['one'],
+      modelValue: ['one'],
       options: ['one', 'two'],
     })
 
@@ -107,7 +108,7 @@ describe('When Tagging Is Enabled', () => {
       pushTags: true,
       taggable: true,
       multiple: true,
-      value: ['one'],
+      modelValue: ['one'],
       options: ['one', 'two'],
     })
 
@@ -122,7 +123,7 @@ describe('When Tagging Is Enabled', () => {
       pushTags: false,
       taggable: true,
       multiple: true,
-      value: ['one'],
+      modelValue: ['one'],
       options: ['one', 'two'],
     })
 
@@ -136,7 +137,7 @@ describe('When Tagging Is Enabled', () => {
       pushTags: false,
       taggable: true,
       multiple: true,
-      value: ['one'],
+      modelValue: ['one'],
       options: ['one', 'two'],
     })
 
@@ -146,7 +147,7 @@ describe('When Tagging Is Enabled', () => {
   })
 
   it('should select an existing option if the search string matches a string from options', async () => {
-    let two = 'two'
+    const two = 'two'
     const Select = selectWithProps({
       taggable: true,
       multiple: true,
@@ -159,7 +160,7 @@ describe('When Tagging Is Enabled', () => {
   })
 
   it('should select an existing option if the search string matches an objects label from options', async () => {
-    let two = { label: 'two' }
+    const two = { label: 'two' }
     const Select = selectWithProps({
       taggable: true,
       options: [{ label: 'one' }, two],
@@ -170,7 +171,7 @@ describe('When Tagging Is Enabled', () => {
   })
 
   it('should select an existing option if the search string matches an objects label from options when filter-options is false', async () => {
-    let two = { label: 'two' }
+    const two = { label: 'two' }
     const Select = selectWithProps({
       taggable: true,
       filterable: false,
@@ -185,7 +186,7 @@ describe('When Tagging Is Enabled', () => {
     const Select = selectWithProps({
       taggable: true,
       multiple: true,
-      value: [{ label: 'one' }],
+      modelValue: [{ label: 'one' }],
       options: [{ label: 'one' }],
     })
 
@@ -198,7 +199,7 @@ describe('When Tagging Is Enabled', () => {
       taggable: true,
       multiple: true,
       filterable: false,
-      value: [{ label: 'one' }],
+      modelValue: [{ label: 'one' }],
       options: [{ label: 'one' }],
     })
 
@@ -222,12 +223,12 @@ describe('When Tagging Is Enabled', () => {
   })
 
   it('should not allow duplicate tags when using object options', async () => {
+    const spy = vi.spyOn(VueSelect.methods, 'select')
     const Select = selectWithProps({
       taggable: true,
       multiple: true,
       options: [{ label: 'two' }],
     })
-    const spy = jest.spyOn(Select.vm, 'select')
 
     await selectTag(Select, 'one')
     expect(Select.vm.selectedValue).toEqual([{ label: 'one' }])
@@ -246,9 +247,8 @@ describe('When Tagging Is Enabled', () => {
     })
 
     Select.vm.typeAheadPointer = 0
-    Select.findComponent({ ref: 'search' }).trigger('keydown.tab')
+    await Select.get('input').trigger('keydown.tab')
 
-    await Select.vm.$nextTick()
     expect(Select.vm.selectedValue).toEqual(['one'])
   })
 })

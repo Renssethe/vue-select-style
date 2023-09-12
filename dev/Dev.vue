@@ -5,10 +5,9 @@
 </template>
 
 <script>
-import vSelect from '../src/components/Select'
-import countries from '../docs/.vuepress/data/countryCodes'
-import books from '../docs/.vuepress/data/books'
-import countriesStyle from '../docs/.vuepress/data/countryCodesStyle'
+import vSelect from '@/components/Select.vue'
+import countries from '../docs/.vuepress/data/countryCodes.js'
+import countriesStyle from '../docs/.vuepress/data/countryCodesStyle.js'
 
 export default {
   components: { vSelect },

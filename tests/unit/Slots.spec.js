@@ -1,56 +1,63 @@
-import { mountDefault } from '../helpers'
+import { it, test, describe, expect, vi } from 'vitest'
+import { h } from 'vue'
+import { mountDefault } from '@tests/helpers.js'
 
 describe('Scoped Slots', () => {
   it('receives an option object to the selected-option-container slot', () => {
     const Select = mountDefault(
-      { value: 'one' },
+      { modelValue: 'one' },
       {
-        scopedSlots: {
-          'selected-option-container': `<span slot="selected-option-container" slot-scope="{option}">{{ option.label }}</span>`,
+        slots: {
+          'selected-option-container': (slotProps) =>
+            h(
+              'span',
+              { slot: 'selected-option-container' },
+              slotProps.option.label
+            ),
         },
       }
     )
 
-    expect(Select.findComponent({ ref: 'selectedOptions' }).text()).toEqual(
-      'one'
-    )
+    expect(Select.get('.vs__selected-options').text()).toEqual('one')
   })
 
   describe('Slot: selected-option', () => {
     it('receives an option object to the selected-option slot', () => {
       const Select = mountDefault(
-        { value: 'one' },
+        { modelValue: 'one' },
         {
-          scopedSlots: {
-            'selected-option': `<span slot="selected-option" slot-scope="option">{{ option.label }}</span>`,
+          slots: {
+            'selected-option': (slotProps) =>
+              h('span', { slot: 'selected-option' }, slotProps.label),
           },
         }
       )
 
-      expect(Select.find('.vs__selected').text()).toEqual('one')
+      expect(Select.get('.vs__selected').text()).toEqual('one')
     })
 
     it('opens the dropdown when clicking an option in selected-option slot', () => {
       const Select = mountDefault(
-        { value: 'one' },
+        { modelValue: 'one' },
         {
-          scopedSlots: {
-            'selected-option': `<span class="my-option" slot-scope="option">{{ option.label }}</span>`,
+          slots: {
+            'selected-option': (slotProps) =>
+              h('span', { class: 'my-option' }, slotProps.label),
           },
         }
       )
 
-      Select.find('.my-option').trigger('mousedown')
+      Select.get('.my-option').trigger('mousedown')
       expect(Select.vm.open).toEqual(true)
     })
   })
 
   it('receives an option object to the option slot in the dropdown menu', async () => {
     const Select = mountDefault(
-      { value: 'one' },
+      { modelValue: 'one' },
       {
-        scopedSlots: {
-          option: `<span slot="option" slot-scope="option">{{ option.label }}</span>`,
+        slots: {
+          option: (slotProps) => h('span', { slot: 'option' }, slotProps.label),
         },
       }
     )
@@ -58,17 +65,15 @@ describe('Scoped Slots', () => {
     Select.vm.open = true
     await Select.vm.$nextTick()
 
-    expect(Select.findComponent({ ref: 'dropdownMenu' }).text()).toEqual(
-      'onetwothree'
-    )
+    expect(Select.get('.vs__dropdown-menu').text()).toEqual('onetwothree')
   })
 
   it('noOptions slot receives the current search text', async () => {
-    const noOptions = jest.fn()
+    const noOptions = vi.fn()
     const Select = mountDefault(
       {},
       {
-        scopedSlots: { 'no-options': noOptions },
+        slots: { 'no-options': noOptions },
       }
     )
 
@@ -84,11 +89,11 @@ describe('Scoped Slots', () => {
   })
 
   test('header slot props', async () => {
-    const header = jest.fn()
+    const header = vi.fn()
     const Select = mountDefault(
       {},
       {
-        scopedSlots: { header: header },
+        slots: { header: header },
       }
     )
     await Select.vm.$nextTick()
@@ -102,11 +107,11 @@ describe('Scoped Slots', () => {
   })
 
   test('footer slot props', async () => {
-    const footer = jest.fn()
+    const footer = vi.fn()
     const Select = mountDefault(
       {},
       {
-        scopedSlots: { footer: footer },
+        slots: { footer: footer },
       }
     )
     await Select.vm.$nextTick()
@@ -120,11 +125,11 @@ describe('Scoped Slots', () => {
   })
 
   test('list-header slot props', async () => {
-    const header = jest.fn()
+    const header = vi.fn()
     const Select = mountDefault(
       {},
       {
-        scopedSlots: { 'list-header': header },
+        slots: { 'list-header': header },
       }
     )
     Select.vm.open = true
@@ -138,11 +143,11 @@ describe('Scoped Slots', () => {
   })
 
   test('list-footer slot props', async () => {
-    const footer = jest.fn()
+    const footer = vi.fn()
     const Select = mountDefault(
       {},
       {
-        scopedSlots: { 'list-footer': footer },
+        slots: { 'list-footer': footer },
       }
     )
     Select.vm.open = true

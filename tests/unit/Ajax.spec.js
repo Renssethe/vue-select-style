@@ -1,6 +1,7 @@
-import { selectWithProps } from '../helpers'
+import { it, describe, expect } from 'vitest'
+import { selectWithProps } from '@tests/helpers.js'
 import { shallowMount } from '@vue/test-utils'
-import vSelect from '../../src/components/Select'
+import vSelect from '@/components/Select.vue'
 
 describe('Asynchronous Loading', () => {
   it('can toggle the loading class', () => {
@@ -41,8 +42,8 @@ describe('Asynchronous Loading', () => {
 
   it('can set loading to false from the @search event callback', async () => {
     const Select = shallowMount(vSelect, {
-      listeners: {
-        search: (search, loading) => {
+      props: {
+        onSearch: (search, loading) => {
           loading(false)
         },
       },

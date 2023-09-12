@@ -76,16 +76,12 @@ export default {
      * Moves the pointer to the last selected option.
      */
     typeAheadToLastSelected() {
-      const indexOfLastSelected =
+      this.typeAheadPointer =
         this.selectedValue.length !== 0
           ? this.filteredOptions.indexOf(
               this.selectedValue[this.selectedValue.length - 1]
             )
           : -1
-
-      if (indexOfLastSelected !== -1) {
-        this.typeAheadPointer = indexOfLastSelected
-      }
     },
   },
 }
