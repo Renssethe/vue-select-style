@@ -1,6 +1,6 @@
 {
     "name": "vue-select-style",
-    "version": "0.1.2",
+    "version": "0.1.4",
     "description": "Everything you wish the HTML <select> element could do, wrapped up into a lightweight, extensible Vue component.",
     "author": "Therence FERRON <therence.ferron@gmail.com>",
     "homepage": "https://github.com/Renssethe/vue-select-style",
